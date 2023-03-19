@@ -1,6 +1,7 @@
 import pickle
 import boto3
 import os
+import face_recognition
 
 # Set the AWS access key and secret key
 aws_access_key_id = 'AKIA4XD6E4L7SF4ANDQ2'
@@ -8,8 +9,14 @@ aws_secret_access_key = '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'
 region = 'us-east-1'
 table_name = 'student-data'
 
+
+input_bucket = 'input-bucket-1523'
+output_bucket_name = 'output-bucket-results231'
+s3 = boto3.client('s3', region_name='us-east-1')
+
+
 '''
-//TODO: Mukul
+//DONE: Mukul
     Reading result known images encoding data from provided encoding file
     Processed encoding data into a dictionary in the form of "face names" : "encoding values"
 '''
@@ -21,6 +28,7 @@ with open('starter/encoding', 'rb') as f:
 known_face_names = known_encodings["name"]
 known_face_encodes = known_encodings["encoding"]
 
+# Creating dictionary with face names and encoding values as per data from encoding file and in order of entries in DynamoDB table
 known_face_dict = {key : value for key, value in zip(known_face_names, known_face_encodes)}
 custom_order = ['mr_bean','president_biden','vin_diesel','floki','president_trump','morgan_freeman','president_obama','johnny_dep','denzel_washington','bush','travis_ragnar']
 sorted_dict = {key: value for key, value in sorted(known_face_dict.items(), key=lambda item: custom_order.index(item[0]))}
@@ -35,46 +43,53 @@ for name, encoding in sorted_dict.items():
         known_names.append(name)
         known_faces.append(encoding) 
 
-print(sorted_dict)
-print(known_names)
+
+
 
 '''
 //TODO: Mukul
-    Fetching image frame from uploaded video using ffmpeg
+    Obtaining input video from input S3 bucket
 '''
 
-# Replace 'input_video.mp4' with the path to your video file
-input_video = 'test_0.mp4'
+# Using local videos for testing
+input_video = 'test_2.mp4'
 
-# Replace 'output_dir' with the directory where you want to save the frames
-current_file_path = os.path.abspath(__file__)
-last_index = current_file_path.rfind("/")
-frame_path = current_file_path[:last_index+1]
 
-# Replace 'frame_rate' with the frame rate you want to extract
-frame_rate = 1
+
+
+'''
+//TODO: Mukul
+    Fetching image frame from uploaded video using ffmpeg and encoding the image data
+'''
+
+# Fetch the current working directory to store the image frames from the input video
+image_frame_path = os.getcwd() + "/"
 
 # Use os.system() to call ffmpeg
-# os.system(f'ffmpeg -i {input_video} -vf fps={frame_rate} {frame_path}/frame_%04d.jpg')
-os.system("ffmpeg -i " + str(input_video) + " -r 1 " + str(frame_path) + "image-%3d.jpeg")
+# -r specifies the frame rate (how many frames are extracted into images in one second, default: 25)
+# The last parameter (the output file) simply numbers your images with 3 digits (000, 001, etc.). 
+os.system("ffmpeg -i " + str(input_video) + " -r 1 " + str(image_frame_path) + "image-%3d.jpeg")
 
-# unknown_face_encoding = face_recognition.face_encodings(unknown_image)[0]
+
+# Uploading and encoding only the first image frame from the input video
+unknown_image = face_recognition.load_image_file("image-001.jpeg")
+unknown_face_encoding = face_recognition.face_encodings(unknown_image)[0]
 
 
 
 
 '''
-//TODO: Mukul
+//DONE: Mukul
     Running face_recognition on the input image frame and comparing with encoding values of known faces
 '''
 
-# results = face_recognition.compare_faces(known_faces, unknown_face_encoding)
+results = face_recognition.compare_faces(known_faces, unknown_face_encoding)
 
 
 
 
 '''
-//TODO: Amartya
+//DONE: Amartya
     Fetching person's data from DynamoDB
 '''
 # Initialize the DynamoDB client
@@ -100,12 +115,11 @@ for d in response['Items']:
     id = d['id']
     del d['id']
     new_dict[id] = d
-new_dict
 
 # Checking for true values in results and creating a new dict with the data obtain from the DynamoDB response
 for i in range(len(results)):
     if results[i] == True:
         true_dict[i] = new_dict[i+1]
 
-
-
+print(true_dict)
+print()
