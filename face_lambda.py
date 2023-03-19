@@ -1,5 +1,6 @@
 import pickle
 import boto3
+import os
 
 # Set the AWS access key and secret key
 aws_access_key_id = 'AKIA4XD6E4L7SF4ANDQ2'
@@ -21,24 +22,41 @@ known_face_names = known_encodings["name"]
 known_face_encodes = known_encodings["encoding"]
 
 known_face_dict = {key : value for key, value in zip(known_face_names, known_face_encodes)}
+custom_order = ['mr_bean','president_biden','vin_diesel','floki','president_trump','morgan_freeman','president_obama','johnny_dep','denzel_washington','bush','travis_ragnar']
+sorted_dict = {key: value for key, value in sorted(known_face_dict.items(), key=lambda item: custom_order.index(item[0]))}
 
 known_faces = []
 known_names = []
 
-for name, encoding in known_face_dict.items():
-    if name in ["denzel_washington","bush","travis_ragnar"]:
+for name, encoding in sorted_dict.items():
+    if name in ['denzel_washington','bush','travis_ragnar']:
         continue
     else:
         known_names.append(name)
         known_faces.append(encoding) 
 
+print(sorted_dict)
 print(known_names)
-
 
 '''
 //TODO: Mukul
     Fetching image frame from uploaded video using ffmpeg
 '''
+
+# Replace 'input_video.mp4' with the path to your video file
+input_video = 'test_0.mp4'
+
+# Replace 'output_dir' with the directory where you want to save the frames
+current_file_path = os.path.abspath(__file__)
+last_index = current_file_path.rfind("/")
+frame_path = current_file_path[:last_index+1]
+
+# Replace 'frame_rate' with the frame rate you want to extract
+frame_rate = 1
+
+# Use os.system() to call ffmpeg
+# os.system(f'ffmpeg -i {input_video} -vf fps={frame_rate} {frame_path}/frame_%04d.jpg')
+os.system("ffmpeg -i " + str(input_video) + " -r 1 " + str(frame_path) + "image-%3d.jpeg")
 
 # unknown_face_encoding = face_recognition.face_encodings(unknown_image)[0]
 
@@ -85,9 +103,9 @@ for d in response['Items']:
 new_dict
 
 #Checking for true values in results and creating a new dict with the data obtain from the DynamoDB response
-for i in range(len(results)):
-    if results[i] == True:
-        true_dict[i] = new_dict[i+1]
+# for i in range(len(results)):
+#     if results[i] == True:
+#         true_dict[i] = new_dict[i+1]
 
 
 
