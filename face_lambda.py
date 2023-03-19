@@ -1,5 +1,11 @@
 import pickle
+import boto3
 
+# Set the AWS access key and secret key
+aws_access_key_id = 'AKIA4XD6E4L7SF4ANDQ2'
+aws_secret_access_key = '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'
+region = 'us-east-1'
+table_name = 'student-data'
 
 '''
 //TODO: Mukul
@@ -53,4 +59,35 @@ print(known_names)
 //TODO: Amartya
     Fetching person's data from DynamoDB
 '''
+# Initialize the DynamoDB client
+dynamodb = boto3.resource('dynamodb', region_name=region,aws_access_key_id=aws_access_key_id,
+                          aws_secret_access_key=aws_secret_access_key)
+
+# Get a reference to the table
+table = dynamodb.Table(table_name)
+
+# Scan the table to read all items
+response = table.scan()
+
+# Print all items in the table
+for item in response['Items']:
+    print(item)
+
+# Create a new dictionary with Item ID as the key for easier access
+new_dict = {}
+# Create a new dictionary for storing the matched id/true values with their data
+true_dict = {}
+
+for d in response['Items']:
+    id = d['id']
+    del d['id']
+    new_dict[id] = d
+new_dict
+
+#Checking for true values in results and creating a new dict with the data obtain from the DynamoDB response
+for i in range(len(results)):
+    if results[i] == True:
+        true_dict[i] = new_dict[i+1]
+
+
 
