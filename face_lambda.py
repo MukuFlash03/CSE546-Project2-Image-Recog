@@ -102,7 +102,7 @@ for d in response['Items']:
     new_dict[id] = d
 new_dict
 
-Checking for true values in results and creating a new dict with the data obtain from the DynamoDB response
+# Checking for true values in results and creating a new dict with the data obtain from the DynamoDB response
 for i in range(len(results)):
     if results[i] == True:
         true_dict[i] = new_dict[i+1]
