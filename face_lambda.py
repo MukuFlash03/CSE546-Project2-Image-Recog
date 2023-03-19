@@ -2,17 +2,24 @@ import pickle
 import boto3
 import os
 import face_recognition
+import csv
 
-# Set the AWS access key and secret key
-aws_access_key_id = 'AKIA4XD6E4L7SF4ANDQ2'
-aws_secret_access_key = '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'
+
+# AWS Resources access setup
+
+
 region = 'us-east-1'
-table_name = 'student-data'
 
+dynamodb_student_table = 'student-data'
+dynamodb = boto3.resource('dynamodb', region_name=region)
 
 input_bucket = 'input-bucket-1523'
-output_bucket_name = 'output-bucket-results231'
-s3 = boto3.client('s3', region_name='us-east-1')
+output_bucket = 'output-bucket-results231'
+s3 = boto3.client('s3', region_name=region)
+
+
+
+# -----------------------------------------------------------
 
 
 '''
@@ -46,19 +53,27 @@ for name, encoding in sorted_dict.items():
 
 
 
+# -----------------------------------------------------------
+
+
 '''
 //TODO: Mukul
     Obtaining input video from input S3 bucket
 '''
 
 # Using local videos for testing
-input_video = 'test_2.mp4'
+input_video = 'test_6.mp4'
+
+# Params - 1,2,3: I/P bucket, Object key, Downloaded file (save as)
+s3.download_file(input_bucket, input_video, input_video)
 
 
+
+# -----------------------------------------------------------
 
 
 '''
-//TODO: Mukul
+//DONE: Mukul
     Fetching image frame from uploaded video using ffmpeg and encoding the image data
 '''
 
@@ -76,6 +91,8 @@ unknown_image = face_recognition.load_image_file("image-001.jpeg")
 unknown_face_encoding = face_recognition.face_encodings(unknown_image)[0]
 
 
+# -----------------------------------------------------------
+
 
 
 '''
@@ -87,24 +104,20 @@ results = face_recognition.compare_faces(known_faces, unknown_face_encoding)
 
 
 
+# -----------------------------------------------------------
+
 
 '''
 //DONE: Amartya
     Fetching person's data from DynamoDB
 '''
-# Initialize the DynamoDB client
-dynamodb = boto3.resource('dynamodb', region_name=region,aws_access_key_id=aws_access_key_id,
-                          aws_secret_access_key=aws_secret_access_key)
+
 
 # Get a reference to the table
-table = dynamodb.Table(table_name)
+table = dynamodb.Table(dynamodb_student_table)
 
 # Scan the table to read all items
 response = table.scan()
-
-# Print all items in the table
-for item in response['Items']:
-    print(item)
 
 # Create a new dictionary with Item ID as the key for easier access
 new_dict = {}
@@ -116,10 +129,48 @@ for d in response['Items']:
     del d['id']
     new_dict[id] = d
 
-# Checking for true values in results and creating a new dict with the data obtain from the DynamoDB response
+# Checking for true values in results and creating a new dict with the data obtained from the DynamoDB response
 for i in range(len(results)):
     if results[i] == True:
-        true_dict[i] = new_dict[i+1]
+        true_dict = new_dict[i+1]
 
 print(true_dict)
-print()
+
+# -----------------------------------------------------------
+
+
+
+
+'''
+//DONE: Mukul
+    Write result data to a CSV file
+'''
+
+csv_data = [value for value in true_dict.values()]
+csv_data.reverse()
+print(type(csv_data))
+print(csv_data)
+
+# csv_file = input_video[:-4] + "_face_result.csv"
+csv_file = "face_result.csv"
+
+with open(csv_file, "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(csv_data)
+
+
+# -----------------------------------------------------------
+
+
+'''
+//TODO: Mukul
+    Upload result CSV file to output-bucket
+'''
+
+
+# Upload the CSV file to the S3 bucket
+# The upload_file method takes three parameters: 
+# the name of the local file to upload, the name of the S3 bucket, 
+# and the key (or path) of the file in the S3 bucket.
+
+s3.upload_file(csv_file, output_bucket, input_video[:-4])
