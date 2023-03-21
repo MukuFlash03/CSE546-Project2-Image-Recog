@@ -3,6 +3,10 @@ import boto3
 import os
 import face_recognition
 import csv
+import uuid
+from glob import glob
+
+
 
 
 # AWS Resources access setup
@@ -29,6 +33,7 @@ s3 = boto3.client('s3', region_name=region)
 '''
 
 # Load the encodings from the file
+# with open('tmp/encoding', 'rb') as f:
 with open('starter/encoding', 'rb') as f:
     known_encodings = pickle.load(f)
 
@@ -65,8 +70,16 @@ for name, encoding in sorted_dict.items():
 input_video = 'test_6.mp4'
 
 # Params - 1,2,3: I/P bucket, Object key, Downloaded file (save as)
-s3.download_file(input_bucket, input_video, input_video)
+# s3.download_file(input_bucket, input_video, input_video)
 
+
+# filename = input_video.split('.')[0]
+object_id = str(uuid.uuid4()) + '_' + input_video
+# image_name = './' + object_id + '_input_video.jpeg'
+# print(object_id)
+
+
+s3.download_file(input_bucket, input_video, object_id)
 
 
 # -----------------------------------------------------------
@@ -83,7 +96,7 @@ image_frame_path = os.getcwd() + "/"
 # Use os.system() to call ffmpeg
 # -r specifies the frame rate (how many frames are extracted into images in one second, default: 25)
 # The last parameter (the output file) simply numbers your images with 3 digits (000, 001, etc.). 
-os.system("ffmpeg -i " + str(input_video) + " -r 1 " + str(image_frame_path) + "image-%3d.jpeg")
+os.system("ffmpeg -i " + str(object_id) + " -r 1 " + str(image_frame_path) + "image-%3d.jpeg")
 
 
 # Uploading and encoding only the first image frame from the input video
@@ -148,10 +161,9 @@ print(true_dict)
 
 csv_data = [value for value in true_dict.values()]
 csv_data.reverse()
-print(type(csv_data))
+# print(type(csv_data))
 print(csv_data)
 
-# csv_file = input_video[:-4] + "_face_result.csv"
 csv_file = "face_result.csv"
 
 with open(csv_file, "w", newline="") as f:
@@ -173,4 +185,17 @@ with open(csv_file, "w", newline="") as f:
 # the name of the local file to upload, the name of the S3 bucket, 
 # and the key (or path) of the file in the S3 bucket.
 
-s3.upload_file(csv_file, output_bucket, input_video[:-4])
+# s3.upload_file(csv_file, output_bucket, input_video[:-4])
+s3.upload_file(csv_file, output_bucket, object_id[:-4])
+
+os.remove(object_id)
+
+for file in glob(image_frame_path + 'image-*.jpeg'):
+    os.remove(file)
+
+
+
+# ---------------------------------------------------------
+
+
+
