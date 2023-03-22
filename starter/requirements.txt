@@ -4,4 +4,4 @@ numpy
 face_recognition
 opencv-python
 ffmpeg
-pickle
+
