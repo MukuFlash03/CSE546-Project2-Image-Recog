@@ -50,6 +50,7 @@ WORKDIR ${FUNCTION_DIR}
 COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
 # (Optional) Add Lambda Runtime Interface Emulator and use a script in the ENTRYPOINT for simpler local runs
 ADD https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie /usr/bin/aws-lambda-rie
+ADD https://github.com/nehavadnere/cse546-project-lambda/blob/master/encoding /tmp/
 RUN chmod 755 /usr/bin/aws-lambda-rie
 
 # Install ffmpeg
@@ -68,3 +69,5 @@ RUN chmod 777 /entry.sh
 # CMD [ "handler.handler" ]
 ENTRYPOINT [ "/entry.sh" ]
 CMD [ "handler.face_recognition_handler" ]
+ENV AWS_ACCESS_KEY_ID=AKIA4XD6E4L7SF4ANDQ2
+ENV AWS_SECRET_ACCESS_KEY=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

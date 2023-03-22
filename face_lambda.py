@@ -1,13 +1,12 @@
 import pickle
+import random
+
 import boto3
 import os
-import face_recognition
+# import face_recognition
 import csv
 import uuid
 from glob import glob
-
-
-
 
 # AWS Resources access setup
 
@@ -22,8 +21,6 @@ output_bucket = 'output-bucket-results231'
 s3 = boto3.client('s3', region_name=region)
 
 
-
-# -----------------------------------------------------------
 
 
 '''
@@ -66,6 +63,20 @@ for name, encoding in sorted_dict.items():
     Obtaining input video from input S3 bucket
 '''
 
+objects = s3.Bucket(input_bucket).objects.all()
+
+# Select a random object key
+random_object_key = random.choice([obj.key for obj in objects])
+
+# //TODO: Saurabh
+# Read the contents of the object
+obj = s3.Object(input_bucket, random_object_key)
+body = obj.get()['Body'].read()
+object_id = obj.key
+with open(os.getcwd()+"\\"+object_id, 'wb') as f:
+    f.write(body)
+obj.delete()
+'''
 # Using local videos for testing
 input_video = 'test_6.mp4'
 
@@ -83,7 +94,7 @@ s3.download_file(input_bucket, input_video, object_id)
 
 
 # -----------------------------------------------------------
-
+'''
 
 '''
 //DONE: Mukul
