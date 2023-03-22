@@ -33,7 +33,9 @@ ARG FUNCTION_DIR
 ARG RUNTIME_VERSION
 # Create function directory
 RUN mkdir -p ${FUNCTION_DIR}
-
+# SET ENVIRONMENT VARIABLES
+ENV AWS_ACCESS_KEY_ID=AKIA4XD6E4L7SF4ANDQ2
+ENV AWS_SECRET_ACCESS_KEY=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
 # Optional – Install the function's dependencies
 # RUN python${RUNTIME_VERSION} -m pip install -r requirements.txt --target ${FUNCTION_DIR}
 # Install Lambda Runtime Interface Client for Python
@@ -59,7 +61,7 @@ RUN apt-get install -y ffmpeg
 # Copy handler function
 COPY requirements.txt ${FUNCTION_DIR}
 RUN python${RUNTIME_VERSION} -m pip install -r requirements.txt --target ${FUNCTION_DIR}
-COPY entry.sh /
+COPY entry.sh ./
 
 # Copy function code
 COPY handler.py ${FUNCTION_DIR}
@@ -69,5 +71,3 @@ RUN chmod 777 /entry.sh
 # CMD [ "handler.handler" ]
 ENTRYPOINT [ "/entry.sh" ]
 CMD [ "handler.face_recognition_handler" ]
-ENV AWS_ACCESS_KEY_ID=AKIA4XD6E4L7SF4ANDQ2
-ENV AWS_SECRET_ACCESS_KEY=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
