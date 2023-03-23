@@ -1,0 +1,16 @@
+$ sudo systemctl start docker
+
+$ sudo systemctl enable docker
+
+# Ensure you are in /starter
+$ sudo docker build -f Dockerfile -t cloud9-test1:latest .
+
+# Connect to ECR
+$ aws ecr get-login-password --region us-east-1 | \ 
+$ sudo docker login --username AWS --password-stdin 874290406143.dkr.ecr.us-east-1.amazonaws.com
+
+$ Tag latest docker image
+$ sudo docker tag cloud9-test1:latest 874290406143.dkr.ecr.us-east-1.amazonaws.com/cloud9_test1:latest
+
+$ Push latest docker image to ECR
+$ sudo docker push 874290406143.dkr.ecr.us-east-1.amazonaws.com/cloud9_test1:latest        
