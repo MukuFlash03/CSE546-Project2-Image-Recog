@@ -65,9 +65,9 @@ COPY entry.sh ${FUNCTION_DIR}
 
 # Copy function code
 COPY handler.py ${FUNCTION_DIR}
-RUN chmod 777 ${FUNCTION_DIR}/entry.sh
+RUN chmod 777 ${FUNCTION_DIR}entry.sh
 
 # Set the CMD to your handler (could also be done as a parameter override outside of the Dockerfile)
 # CMD [ "handler.handler" ]
-ENTRYPOINT [ "${FUNCTION_DIR}/entry.sh" ]
+ENTRYPOINT [ "${FUNCTION_DIR}entry.sh" ]
 CMD [ "handler.face_recognition_handler" ]
