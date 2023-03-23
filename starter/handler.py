@@ -30,7 +30,7 @@ def face_recognition_handler(event, context):
 		output_bucket = 'output-bucket-results231'
 		s3 = boto3.resource('s3', region_name=region)
 
-		with open('starter/encoding', 'rb') as f:
+		with open('tmp/encoding', 'rb') as f:
 			known_encodings = pickle.load(f)
 
 		known_face_names = known_encodings["name"]
