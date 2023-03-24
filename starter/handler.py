@@ -18,9 +18,9 @@ def open_encoding(filename):
 	file.close()
 	return data
 
-def face_recognition_handler(event, context):	
-	# print("Hello")
-	if event['Records'][0]['eventSource'] == 'aws:s3':
+def face_recognition_handler(event, context):
+	try:
+		print('Received AWS s3 creation event')
 		region = 'us-east-1'
 
 		dynamodb_student_table = 'student-data'
@@ -30,7 +30,7 @@ def face_recognition_handler(event, context):
 		output_bucket = 'output-bucket-results231'
 		s3 = boto3.resource('s3', region_name=region)
 
-		with open('tmp/encoding', 'rb') as f:
+		with open('./encoding', 'rb') as f:
 			known_encodings = pickle.load(f)
 
 		known_face_names = known_encodings["name"]
@@ -56,7 +56,7 @@ def face_recognition_handler(event, context):
 		object_id = event['Records'][0]['s3']['object']['key']
 		response = s3.get_object(Bucket=input_bucket, Key=object_id)
 		data = response['Body'].read()
-		with open(os.getcwd() + "\\" + object_id, 'wb') as f:
+		with open(os.getcwd() + "/" + object_id, 'wb') as f:
 			f.write(data)
 		response = s3.delete_object(Bucket=input_bucket, Key=object_id)
 		print(response)
@@ -120,5 +120,5 @@ def face_recognition_handler(event, context):
 
 		for file in glob(image_frame_path + 'image-*.jpeg'):
 			os.remove(file)
-	else:
-		print("Not an s3 event")
+	except Exception as exp:
+		print("Some issue with function - ",exp)
