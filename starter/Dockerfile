@@ -33,9 +33,7 @@ ARG FUNCTION_DIR
 ARG RUNTIME_VERSION
 # Create function directory
 RUN mkdir -p ${FUNCTION_DIR}
-# SET ENVIRONMENT VARIABLES
-ENV AWS_ACCESS_KEY_ID=AKIA4XD6E4L7SF4ANDQ2
-ENV AWS_SECRET_ACCESS_KEY=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
+
 # Optional – Install the function's dependencies
 # RUN python${RUNTIME_VERSION} -m pip install -r requirements.txt --target ${FUNCTION_DIR}
 # Install Lambda Runtime Interface Client for Python
@@ -52,7 +50,6 @@ WORKDIR ${FUNCTION_DIR}
 COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
 # (Optional) Add Lambda Runtime Interface Emulator and use a script in the ENTRYPOINT for simpler local runs
 ADD https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie /usr/bin/aws-lambda-rie
-ADD https://github.com/nehavadnere/cse546-project-lambda/blob/master/encoding /tmp/
 RUN chmod 755 /usr/bin/aws-lambda-rie
 
 # Install ffmpeg
@@ -61,13 +58,14 @@ RUN apt-get install -y ffmpeg
 # Copy handler function
 COPY requirements.txt ${FUNCTION_DIR}
 RUN python${RUNTIME_VERSION} -m pip install -r requirements.txt --target ${FUNCTION_DIR}
-COPY entry.sh ${FUNCTION_DIR}
+COPY entry.sh /
+COPY encoding /
 
 # Copy function code
 COPY handler.py ${FUNCTION_DIR}
-RUN chmod 777 ${FUNCTION_DIR}entry.sh
+RUN chmod 777 /entry.sh
 
 # Set the CMD to your handler (could also be done as a parameter override outside of the Dockerfile)
 # CMD [ "handler.handler" ]
-ENTRYPOINT [ "/home/app/entry.sh" ]
+ENTRYPOINT [ "/entry.sh" ]
 CMD [ "handler.face_recognition_handler" ]
