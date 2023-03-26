@@ -11,6 +11,7 @@ import os
 import csv
 from glob import glob
 
+
 # Function to read the 'encoding' file
 def open_encoding(filename):
     file = open(filename, "rb")
@@ -30,7 +31,7 @@ def face_recognition_handler(event, context):
         input_bucket = 'input-bucket-1523'
         output_bucket = 'output-bucket-results231'
         s3 = boto3.client('s3', region_name=region)
-
+        print("Opening encoding file")
         with open('./encoding', 'rb') as f:
             known_encodings = pickle.load(f)
 
@@ -53,28 +54,31 @@ def face_recognition_handler(event, context):
             else:
                 known_names.append(name)
                 known_faces.append(encoding)
-
+        print("Fetching object key from event data...")
         object_id = event['Records'][0]['s3']['object']['key']
+        print("Processing file: ",object_id)
         response = s3.get_object(Bucket=input_bucket, Key=object_id)
         data = response['Body'].read()
-        with open(os.getcwd() + "/" + object_id, 'wb') as f:
+        print("Writing file locally...")
+        with open("/tmp/" + object_id, 'wb') as f:
             f.write(data)
         response = s3.delete_object(Bucket=input_bucket, Key=object_id)
         print(response)
         # Fetch the current working directory to store the image frames from the input video
-        image_frame_path = os.getcwd() + "/"
+        image_frame_path = "/tmp/"
 
         # Use os.system() to call ffmpeg
         # -r specifies the frame rate (how many frames are extracted into images in one second, default: 25)
         # The last parameter (the output file) simply numbers your images with 3 digits (000, 001, etc.).
-        os.system("ffmpeg -i " + str(object_id) + " -r 1 " + str(image_frame_path) + "image-%3d.jpeg")
+        print("Running ffmpeg...")
+        os.system("ffmpeg -i " + "/tmp/"+str(object_id) + " -r 1 " + str(image_frame_path) + "image-%3d.jpeg")
 
         # Uploading and encoding only the first image frame from the input video
-        unknown_image = face_recognition.load_image_file("image-001.jpeg")
+        unknown_image = face_recognition.load_image_file("/tmp/image-001.jpeg")
         unknown_face_encoding = face_recognition.face_encodings(unknown_image)[0]
 
         results = face_recognition.compare_faces(known_faces, unknown_face_encoding)
-
+        print("Got results: ", results)
         # Get a reference to the table
         table = dynamodb.Table(dynamodb_student_table)
 
@@ -103,8 +107,8 @@ def face_recognition_handler(event, context):
         # print(type(csv_data))
         print(csv_data)
 
-        csv_file = "face_result.csv"
-
+        csv_file = "/tmp/face_result.csv"
+        print("Writing csv file...")
         with open(csv_file, "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(csv_data)
@@ -115,16 +119,18 @@ def face_recognition_handler(event, context):
         # and the key (or path) of the file in the S3 bucket.
 
         # s3.upload_file(csv_file, output_bucket, input_video[:-4])
+        print("Uploading csv file...")
         s3.upload_file(csv_file, output_bucket, object_id[:-4])
 
-        os.remove(object_id)
-
+        os.remove("/tmp/"+object_id)
+        os.remove(csv_file)
         for file in glob(image_frame_path + 'image-*.jpeg'):
             os.remove(file)
         response = {
             'statusCode': 200,
             'body': 'Successful'
         }
+        print("Function executed successfully")
         return response
     except Exception as exp:
         print("Some issue with function - ", exp)
