@@ -62,8 +62,8 @@ def face_recognition_handler(event, context):
         print("Writing file locally...")
         with open("/tmp/" + object_id, 'wb') as f:
             f.write(data)
-        response = s3.delete_object(Bucket=input_bucket, Key=object_id)
-        print(response)
+        # response = s3.delete_object(Bucket=input_bucket, Key=object_id)
+        # print(response)
         # Fetch the current working directory to store the image frames from the input video
         image_frame_path = "/tmp/"
 
