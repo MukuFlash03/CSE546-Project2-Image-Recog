@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import boto3
 
 session = boto3.Session()
@@ -30,5 +32,4 @@ while True:
                 )
     except Exception as exp:
         print("Some error occured while monitoring SQS: ",exp)
-
 
